@@ -9,7 +9,7 @@ public class SandboxControler : MonoBehaviour {
 
     private int HEIGHT_KINECT = 424;
     private int WIDTH_KINECT = 512;
-    //static int MIN_DIMEN = 240;
+    static int MIN_DIMEN = 256;
     readonly int SKIP_FRAMES_MIN_MAX = 30;
     readonly int SKIP_FRAMES_MAPCOLOR = 10;
     readonly int SKIP_FRAMES_MAPHEIGHT = 5;
@@ -20,7 +20,7 @@ public class SandboxControler : MonoBehaviour {
     private const int epsilon = 2;
 
     public int maxHeightMap = 100;
-    public float heightOffset = 0.03f;
+    public float heightOffset = 2.0f;
     private int checkToWriteFile = 200;
     private int countFrameMinMax = 0;
     private int countFrameMapColor = 0;
@@ -58,9 +58,12 @@ public class SandboxControler : MonoBehaviour {
         initKinectController();
 
         //MIN_DIMEN = Math.Min(HEIGHT_KINECT, WIDTH_KINECT);
-        data = new float[HEIGHT_KINECT, WIDTH_KINECT];
+        data = new float[MIN_DIMEN, MIN_DIMEN];
         /*mRain = this.gameObject.transform.GetChild(0).gameObject;
         mWater = this.gameObject.transform.GetChild(1).gameObject;*/
+        addTree(0, treeList, 0, 0, 256, 256);
+        GetComponent<Terrain>().terrainData.treeInstances = treeList.ToArray();
+        GetComponent<Terrain>().terrainData.SetHeights(0, 0, new float[,] { { } });
     }
 
     private void handleWater()
@@ -97,51 +100,37 @@ public class SandboxControler : MonoBehaviour {
     {
         //handleWater();
         DepthImage = (ushort[]) sensorData.depthImage.Clone();
-        /*checkToWriteFile--;
-        if (checkToWriteFile == 0)
-        {
-            using (FileStream fs = new FileStream("a.txt", FileMode.CreateNew, FileAccess.Write))
-            using (StreamWriter sw = new StreamWriter(fs))
-            {
-
-                for (int i = 0; i < 424 * 512; i++)
-                {
-                    sw.Write(sensorData.depthImage[i]);
-                    sw.Write(" ");
-
-                }
-                sw.Close();
-            }
-        }
-        */
+      
         loadDepthDataToTerrain(GetComponent<Terrain>().terrainData, DepthImage);
-       
-        
+        Debug.Log("height: " + GetComponent<Terrain>().terrainData.heightmapHeight);
+        Debug.Log("width: " + GetComponent<Terrain>().terrainData.heightmapWidth);
     }
     
 
     void loadDepthDataToTerrain(TerrainData tData, ushort[] rawData)
     {
-        int i = rawData.Length - 1;
+        //int i = rawData.Length - 1;
+        int i = 0;
 
         //Delay to update min max value
         if (countFrameMinMax == 0)
         {
-            maxVal = (float)rawData.Max() / NORMALIZE_RAW_DATA;
+            //maxVal = (float)rawData.Max() / NORMALIZE_RAW_DATA;
             minVal = (float)rawData.Min() / NORMALIZE_RAW_DATA;
-            Debug.Log("maxVal: " + maxVal + "minVal: " + minVal);
+            //Debug.Log("maxVal: " + maxVal + "minVal: " + minVal);
         }
         countFrameMinMax = (countFrameMinMax + 1) % SKIP_FRAMES_MIN_MAX;
 
         //Delay to render map
         if (countFrameMapHeight == 0)
         {
-            for (int y = 0; y < HEIGHT_KINECT; y++)
+            for (int y = 0; y < MIN_DIMEN; y++) 
             {
-                for (int x = 0; x < WIDTH_KINECT; x++)
+                i = i + 170;
+                for (int x = 0; x < MIN_DIMEN; x++)
                 {
                     //flatten background
-                    if (rawData[i] >= minVal && rawData[i] <= minVal + heightOffset)
+                    if (rawData[i] / NORMALIZE_RAW_DATA >= minVal && rawData[i] / NORMALIZE_RAW_DATA <= minVal + heightOffset)
                     {
                         data[y, x] = minVal;
                     } else
@@ -149,10 +138,12 @@ public class SandboxControler : MonoBehaviour {
                         data[y,x] = 1 - (float)rawData[i] / NORMALIZE_RAW_DATA;
                     }
                     //data[y, x] = (y + x) / NORMALIZE_RAW_DATA;
-                    i--;
+                   
+                    i++;
                 }
+                i = i + (512 - 256-170);
             }
-            tData.size = new Vector3(HEIGHT_KINECT, maxHeightMap, WIDTH_KINECT);
+            tData.size = new Vector3(MIN_DIMEN, maxHeightMap, MIN_DIMEN);
             tData.SetHeights(0, 0, data);
         }
         countFrameMapHeight = (countFrameMapHeight + 1) % SKIP_FRAMES_MAPHEIGHT;
@@ -179,27 +170,28 @@ public class SandboxControler : MonoBehaviour {
         int diffThreshold;
 
 
-        if (currentMax != 0)
-        {
-            if (threshold.Value - currentMax <= epsilon)
-            {
-                currentMax = threshold.Value;
+        /* if (currentMax != 0)
+         {
+             if (threshold.Value - currentMax <= epsilon)
+             {
+                 currentMax = threshold.Value;
 
-                //mRain.SetActive(false);
-                isRaining = false;
-            }
-            else
-            {
-                //mRain.SetActive(true);
-                isRaining = true;
-            }
-            diffThreshold = currentMax - threshold.Key;
-        }
-        else
-        {
-            diffThreshold = threshold.Value - threshold.Key;
-            currentMax = threshold.Value;
-        }
+                 //mRain.SetActive(false);
+                 isRaining = false;
+             }
+             else
+             {
+                 //mRain.SetActive(true);
+                 isRaining = true;
+             }
+             diffThreshold = currentMax - threshold.Key;
+         }
+         else
+         {
+             diffThreshold = threshold.Value - threshold.Key;
+             currentMax = threshold.Value;
+         }*/
+        diffThreshold = threshold.Value - threshold.Key;
         Debug.Log("min: " + threshold.Key + "max: " + threshold.Value);
 
         if (oldMax != threshold.Value || oldMin != threshold.Key)
@@ -232,7 +224,7 @@ public class SandboxControler : MonoBehaviour {
                 // Setup an array to record the mix of texture weights at this point
                 float[] splatWeights = new float[terrainData.alphamapLayers];
 
-                handleSetWeights(height, diffThreshold, 5, splatWeights, placedTrees, treeList, x, y, terrainData.heightmapHeight, terrainData.heightmapWidth);
+                handleSetWeights(height - threshold.Key, diffThreshold, 5, splatWeights, placedTrees, treeList, x, y, terrainData.heightmapHeight, terrainData.heightmapWidth);
 
                 // Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
                 float z = splatWeights.Sum();
@@ -268,10 +260,10 @@ public class SandboxControler : MonoBehaviour {
                     double tmp = a - i * 1.0f;
                     splatWeights[i] = (float)tmp;
                     splatWeights[i - 1] = (float)(1.0 - tmp);
-                    if (i == 2 && splatWeights[i] > 0.89 && isChanged)
+                    /*if (i == 2 && splatWeights[i] > 0.999 && isChanged)
                     {
                         addTree(placedTrees, treeList, x, y, mapHeight, mapWidth);
-                    }
+                    }*/
                 }
                 else
                 {
@@ -321,7 +313,7 @@ public class SandboxControler : MonoBehaviour {
             }
         }
 
-        for (int i = 1; i < 100; i++)
+        for (int i = 1; i < 200; i++)
         {
             if (mappingVal[i] != 0)
             {
@@ -329,7 +321,7 @@ public class SandboxControler : MonoBehaviour {
                 break;
             }
         }
-        for (int i = 99; i > 0; i--)
+        for (int i = 199; i > 0; i--)
         {
             if (mappingVal[i] != 0)
             {
@@ -395,7 +387,7 @@ public class SandboxControler : MonoBehaviour {
     private List<TreeInstance> addTree(int placedTrees, List<TreeInstance> treeList, int x, int y, int mapHeight, int mapWidth)
     {
         float percent = UnityEngine.Random.value;
-        if (percent > 0.99f)
+        if(true)// (percent > 0.99f)
         {
             placedTrees++;
 
