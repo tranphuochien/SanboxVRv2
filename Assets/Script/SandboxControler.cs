@@ -123,13 +123,17 @@ public class SandboxControler : MonoBehaviour {
     void loadDepthDataToTerrain(TerrainData tData, ushort[] rawData)
     {
         int i = rawData.Length - 1;
+
+        //Delay to update min max value
         if (countFrameMinMax == 0)
         {
             maxVal = (float)rawData.Max() / NORMALIZE_RAW_DATA;
             minVal = (float)rawData.Min() / NORMALIZE_RAW_DATA;
+            Debug.Log("maxVal: " + maxVal + "minVal: " + minVal);
         }
         countFrameMinMax = (countFrameMinMax + 1) % SKIP_FRAMES_MIN_MAX;
 
+        //Delay to render map
         if (countFrameMapHeight == 0)
         {
             for (int y = 0; y < HEIGHT_KINECT; y++)
@@ -142,13 +146,11 @@ public class SandboxControler : MonoBehaviour {
                         data[y, x] = minVal;
                     } else
                     {
-                        data[y,x] = maxVal - (float)rawData[i] / NORMALIZE_RAW_DATA;
+                        data[y,x] = 1 - (float)rawData[i] / NORMALIZE_RAW_DATA;
                     }
-                    //data[y, x] = (y + x) / 6000.0f;
+                    //data[y, x] = (y + x) / NORMALIZE_RAW_DATA;
                     i--;
                 }
-                // to make terrain square
-                //i = i - 80;
             }
             tData.size = new Vector3(HEIGHT_KINECT, maxHeightMap, WIDTH_KINECT);
             tData.SetHeights(0, 0, data);
@@ -162,13 +164,14 @@ public class SandboxControler : MonoBehaviour {
         //    guestThresholdMapColor(tData);
         //}
 
-        /*if (countFrameMapColor == 0)
+        //Delay to render color
+        if (countFrameMapColor == 0)
         {
             KeyValuePair<int, int> threshold = guestThresholdMapColor(tData);
             mapColor(tData, threshold);
         }
         countFrameMapColor = (countFrameMapColor + 1) % SKIP_FRAMES_MAPCOLOR;
-        */
+        
     }
 
     private void mapColor(TerrainData terrainData, KeyValuePair<int, int> threshold)
