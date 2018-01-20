@@ -13,7 +13,7 @@ public class SandboxControler : MonoBehaviour {
     readonly int SKIP_FRAMES_MIN_MAX = 30;
     readonly int SKIP_FRAMES_MAPCOLOR = 10;
     readonly int SKIP_FRAMES_MAPHEIGHT = 5;
-    readonly float NORMALIZE_RAW_DATA = 1000.0f;
+    readonly float NORMALIZE_RAW_DATA = 1500.0f;
 
     float[,] data;
     ushort[] DepthImage;
@@ -61,9 +61,9 @@ public class SandboxControler : MonoBehaviour {
         data = new float[MIN_DIMEN, MIN_DIMEN];
         /*mRain = this.gameObject.transform.GetChild(0).gameObject;
         mWater = this.gameObject.transform.GetChild(1).gameObject;*/
-        addTree(0, treeList, 0, 0, 256, 256);
-        GetComponent<Terrain>().terrainData.treeInstances = treeList.ToArray();
-        GetComponent<Terrain>().terrainData.SetHeights(0, 0, new float[,] { { } });
+        //addTree(0, treeList, 0, 0, 256, 256);
+        //GetComponent<Terrain>().terrainData.treeInstances = treeList.ToArray();
+        //GetComponent<Terrain>().terrainData.SetHeights(0, 0, new float[,] { { } });
     }
 
     private void handleWater()
@@ -194,7 +194,7 @@ public class SandboxControler : MonoBehaviour {
         diffThreshold = threshold.Value - threshold.Key;
         Debug.Log("min: " + threshold.Key + "max: " + threshold.Value);
 
-        if (oldMax != threshold.Value || oldMin != threshold.Key)
+        if ((oldMax < threshold.Value - 2) || (oldMax > threshold.Key + 2) || (oldMin < threshold.Key - 3) || (oldMin > threshold.Key + 3) )
         {
             isChanged = true;
             oldMax = threshold.Value;
@@ -260,10 +260,10 @@ public class SandboxControler : MonoBehaviour {
                     double tmp = a - i * 1.0f;
                     splatWeights[i] = (float)tmp;
                     splatWeights[i - 1] = (float)(1.0 - tmp);
-                    /*if (i == 2 && splatWeights[i] > 0.999 && isChanged)
+                    if (i == 2 && splatWeights[i] > 0.8 && isChanged)
                     {
                         addTree(placedTrees, treeList, x, y, mapHeight, mapWidth);
-                    }*/
+                    }
                 }
                 else
                 {
@@ -344,9 +344,9 @@ public class SandboxControler : MonoBehaviour {
 
     private void deleteAllTree()
     {
-        List<TreeInstance> newTrees = new List<TreeInstance>(0);
+        treeList.Clear();
         placedTrees = 0;
-        GetComponent<Terrain>().terrainData.treeInstances = newTrees.ToArray();
+        GetComponent<Terrain>().terrainData.treeInstances = treeList.ToArray();
     }
 
     private void renderTree(TerrainData terrainData)
@@ -387,7 +387,7 @@ public class SandboxControler : MonoBehaviour {
     private List<TreeInstance> addTree(int placedTrees, List<TreeInstance> treeList, int x, int y, int mapHeight, int mapWidth)
     {
         float percent = UnityEngine.Random.value;
-        if(true)// (percent > 0.99f)
+        if(percent > 0.99f)// (percent > 0.99f)
         {
             placedTrees++;
 
