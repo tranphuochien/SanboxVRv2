@@ -194,7 +194,7 @@ public class SandboxControler : MonoBehaviour {
         diffThreshold = threshold.Value - threshold.Key;
         Debug.Log("min: " + threshold.Key + "max: " + threshold.Value);
 
-        if ((oldMax < threshold.Value - 2) || (oldMax > threshold.Key + 2) || (oldMin < threshold.Key - 3) || (oldMin > threshold.Key + 3) )
+        if ((oldMax < threshold.Value - 2) || (oldMax > threshold.Value + 2) || (oldMin < threshold.Key - 3) || (oldMin > threshold.Key + 3) )
         {
             isChanged = true;
             oldMax = threshold.Value;
