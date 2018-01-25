@@ -61,9 +61,6 @@ public class SandboxControler : MonoBehaviour {
         data = new float[MIN_DIMEN, MIN_DIMEN];
         /*mRain = this.gameObject.transform.GetChild(0).gameObject;
         mWater = this.gameObject.transform.GetChild(1).gameObject;*/
-        //addTree(0, treeList, 0, 0, 256, 256);
-        //GetComponent<Terrain>().terrainData.treeInstances = treeList.ToArray();
-        //GetComponent<Terrain>().terrainData.SetHeights(0, 0, new float[,] { { } });
     }
 
     private void handleWater()
@@ -102,8 +99,6 @@ public class SandboxControler : MonoBehaviour {
         DepthImage = (ushort[]) sensorData.depthImage.Clone();
       
         loadDepthDataToTerrain(GetComponent<Terrain>().terrainData, DepthImage);
-        Debug.Log("height: " + GetComponent<Terrain>().terrainData.heightmapHeight);
-        Debug.Log("width: " + GetComponent<Terrain>().terrainData.heightmapWidth);
     }
     
 
@@ -329,16 +324,6 @@ public class SandboxControler : MonoBehaviour {
                 break;
             }
         }
-        //using (FileStream fs = new FileStream("a.txt", FileMode.CreateNew, FileAccess.Write))
-        //using (StreamWriter sw = new StreamWriter(fs))
-        //{
-
-        //    for (int i = 0; i < mappingVal.Length; i++)
-        //    {
-        //            sw.WriteLine(i + "   " + mappingVal[i]);   
-        //    }
-        //    sw.Close();
-        //}
         return new KeyValuePair<int, int>(min, max);
     }
 
